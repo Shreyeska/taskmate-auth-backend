@@ -7,3 +7,5 @@ Steps for backend.
 4. npm i nodemon express cors bcrypt dotenv
 5. made index.js file
 6. package.json -> "start":"nodemon index.js"
+7. made folders: configs, controllers, middlewares, routes, services
+
