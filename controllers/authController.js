@@ -1,8 +1,16 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 3600000,
+  sameSite: "strict",
+  path: "/",
+};
 
 const register = async (req, res) => {
   try {
@@ -36,17 +44,13 @@ const register = async (req, res) => {
     });
 
     // Generate JWT token
-    const token = jwt.sign(
-      { id: user.id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h"}
-    );
-
-    // Return token (store this in client)
-    res.status(201).json({
-      message: "User registered successfully",
-      token,
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
+
+    res.cookie("token", token, cookieOptions);
+
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -80,20 +84,26 @@ const login = async (req, res) => {
     }
 
     // Generate JWT token
-    const token = jwt.sign(
-      { id: user.id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    res.status(200).json({
-      message: "Login successful",
-      token,
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
+
+    // Set HTTP-only cookie
+    res.cookie("token", token, cookieOptions);
+
+    res.status(200).json({ message: "Login successful" });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export { register, login };
+const logout = async (req, res) => {
+  res.clearCookie("token", {
+    ...cookieOptions,
+    maxAge: undefined,
+  });
+  res.status(200).json({ message: "Logged out successfully" });
+};
+
+export { register, login, logout };
