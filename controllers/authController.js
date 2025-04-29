@@ -105,5 +105,30 @@ const logout = async (req, res) => {
   });
   res.status(200).json({ message: "Logged out successfully" });
 };
+const verify = async (req, res) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
 
-export { register, login, logout };
+    // Fetch fresh user data from database
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        username: true,
+        created_date: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("Verification error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+export { register, login, logout, verify };

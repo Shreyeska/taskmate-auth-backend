@@ -8,16 +8,17 @@ import taskRoutes from "./routes/taskRoutes.js";
 const app = express();
 
 dotenv.config();
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: "http://localhost:5173",
     credentials: true,
     methods: ["GET", "POST", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 app.use(cookieParser());
-app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
